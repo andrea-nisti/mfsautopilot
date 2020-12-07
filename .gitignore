@@ -11,6 +11,7 @@
 *.ilk
 *.map
 *.exp
+*.list
 
 # Precompiled Headers
 *.gch
@@ -22,31 +23,12 @@
 *.la
 *.lo
 
-# Shared objects (inc. Windows DLLs)
-*.dll
-*.so
-*.so.*
-*.dylib
-
 # Executables
-*.exe
-*.out
-*.app
-*.i*86
-*.x86_64
-*.hex
+*.bin
+*.elf
 
-# Debug files
-*.dSYM/
+# Misc
 *.su
-*.idb
-*.pdb
-
-# Kernel Module Compile Results
-*.mod*
-*.cmd
-.tmp_versions/
-modules.order
-Module.symvers
-Mkfile.old
-dkms.conf
+*.mk
+.settings/
+*.launch
