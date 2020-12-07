@@ -8,8 +8,7 @@
 #include <stdint.h>
 #include "encoder.h"
 
-
-void initEncoderStruct(uint8_t uid,Encoder_t* encoderPtr){
+void encoderInitStruct(Encoder_t* encoderPtr, uint8_t uid){
   encoderPtr->encoderValue = 0;
   encoderPtr->stateA       = PIN_SET;
   encoderPtr->stateB       = PIN_SET;
@@ -19,7 +18,7 @@ void initEncoderStruct(uint8_t uid,Encoder_t* encoderPtr){
   encoderPtr->encoderUID   = uid;
 }
 
-void updateRawEncoderValues(Encoder_t* encoderPtr,PinState_t rawStateA, PinState_t rawStateB){
+void encoderUpdateRawValues(Encoder_t* encoderPtr,PinState_t rawStateA, PinState_t rawStateB){
 
   encoderPtr->stateA = rawStateA;
   encoderPtr->stateB = rawStateB;
@@ -54,9 +53,9 @@ void updateRawEncoderValues(Encoder_t* encoderPtr,PinState_t rawStateA, PinState
   encoderPtr->stateBPrev = encoderPtr->stateB;
 }
 
-int32_t getEncoderValue(Encoder_t* encoderPtr){
+int32_t encoderGetValue(Encoder_t* encoderPtr){
   return encoderPtr->encoderValue;
 }
-uint8_t getEncoderUID(Encoder_t* encoderPtr){
+uint8_t encoderGetUID(Encoder_t* encoderPtr){
   return encoderPtr->encoderUID;
 }
