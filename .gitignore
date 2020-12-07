@@ -32,3 +32,5 @@
 *.mk
 .settings/
 *.launch
+/Debug/
+.vscode/c_cpp_properties.json
