@@ -16,3 +16,27 @@ EdgeState_t checkRisingFallingState(PinState_t actual,PinState_t previous){
     return EDGE_FALLING;
   }
 }
+
+void initDebouncer(DebouncedState_t* stateStructPtr, uint16_t debouncerMaxCount){
+  stateStructPtr->debounceMaxCounter = 0;
+  stateStructPtr->debounceMaxCounter = debouncerMaxCount;
+  stateStructPtr->previousRawState   = PIN_RESET;
+}
+
+PinState_t updateDebouncedSignal(DebouncedState_t* stateStructPtr, PinState_t actualRawState){
+
+     if(actualRawState == stateStructPtr->previousRawState){
+       stateStructPtr->debounceCounter++;
+     }else{
+       stateStructPtr->debounceCounter = 0;
+     }
+     stateStructPtr->previousRawState = actualRawState;
+
+     if(stateStructPtr->debounceCounter >= stateStructPtr->debounceMaxCounter){
+       stateStructPtr->debounceCounter = 0;
+       stateStructPtr->previousRawState = actualRawState;
+       return actualRawState;
+     }else{
+       return stateStructPtr->previousRawState;
+     }
+}

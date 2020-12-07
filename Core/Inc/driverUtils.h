@@ -8,6 +8,8 @@
 #ifndef INC_DRIVERUTILS_H_
 #define INC_DRIVERUTILS_H_
 
+#include <stdint.h>
+
 typedef enum
 {
   PIN_RESET = 0,
@@ -20,6 +22,15 @@ typedef enum {
   EDGE_RISING
 } EdgeState_t;
 
-EdgeState_t checkRisingFallingState(PinState_t actual,PinState_t previous);
+typedef struct {
+  PinState_t previousRawState;
+  PinState_t previousState;
+  uint16_t debounceCounter;
+  uint16_t debounceMaxCounter;
+} DebouncedState_t;
+
+EdgeState_t checkRisingFallingState(PinState_t actual, PinState_t previous);
+void initDebouncer(DebouncedState_t* stateStructPtr, uint16_t debouncerMaxCount);
+PinState_t updateDebouncedSignal(DebouncedState_t* stateStructPtr, PinState_t actualRawState);
 
 #endif /* INC_DRIVERUTILS_H_ */
