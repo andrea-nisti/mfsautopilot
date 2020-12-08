@@ -64,12 +64,14 @@ static void MX_USART2_UART_Init(void);
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
 PinState_t readButt1(void){
-  return (PinState_t)HAL_GPIO_ReadPin(B1_GPIO_Port, B1_Pin);
+  PinState_t ret = HAL_GPIO_ReadPin(B1_GPIO_Port, B1_Pin);
+  return ret;
 }
 
 void onB1Push(void){
   HAL_GPIO_TogglePin(LD2_GPIO_Port, LD2_Pin);
 }
+
 /* USER CODE END 0 */
 
 /**
@@ -108,10 +110,8 @@ int main(void)
   encoderInitStruct(&enc1, 1);
 
   Button_t butt1;
-  buttonInitStruct(&butt1, PIN_RESET, readButt1, onB1Push, NULL, NULL);
-  HAL_Delay(1000);
+  while(buttonInitStruct(&butt1, readButt1, NULL, NULL, onB1Push,3000).Code != DRIVER_OK);
 
-  //updateRawEncoderValues(&enc1, stateA_raw, stateB_raw);
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -122,16 +122,17 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
-
     PinState_t stateA_raw = (PinState_t)HAL_GPIO_ReadPin(GPIO_ENC1_A_GPIO_Port, GPIO_ENC1_A_Pin);
     PinState_t stateB_raw = (PinState_t)HAL_GPIO_ReadPin(GPIO_ENC1_B_GPIO_Port, GPIO_ENC1_B_Pin);
     encoderUpdateRawValues(&enc1, stateA_raw, stateB_raw);
+
     uint32_t encoderValue = encoderGetValue(&enc1);
     if((encoderValue != prevEncValue)){
       HAL_GPIO_TogglePin(LD2_GPIO_Port, LD2_Pin);
       prevEncValue = encoderValue;
     }
-    buttonUpdateState(&butt1, 0);
+
+    buttonUpdateState(&butt1, HAL_GetTick());
     
     HAL_Delay(3);
   }

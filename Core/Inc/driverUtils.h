@@ -10,6 +10,14 @@
 
 #include <stdint.h>
 
+typedef struct {
+  enum {
+    DRIVER_OK = 0,
+    DRIVER_ERROR
+  } Code;
+  uint32_t flag;
+} DriverStatus_t;
+
 typedef enum
 {
   PIN_RESET = 0,
