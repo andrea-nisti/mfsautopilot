@@ -6,22 +6,41 @@
  */
 
 #include <stdint.h>
+#include <stddef.h>
 #include "encoder.h"
 
-void encoderInitStruct(Encoder_t* encoderPtr, uint8_t uid){
+DriverStatus_t encoderInitStruct(Encoder_t* encoderPtr, uint8_t uid, PinState_t (*readA)(void), PinState_t (*readB)(void)){
+  DriverStatus_t status = {
+      .Code = DRIVER_ERROR,
+      .flag = ENCODER_INIT_ERROR
+  };
+
+  if(readA == NULL || readB == NULL){
+    return status;
+  }
+
+
+  encoderPtr->readA = readA;
+  encoderPtr->readB = readB;
+  PinState_t stateA = readA();
+  PinState_t stateB = readB();
+
   encoderPtr->encoderValue = 0;
-  encoderPtr->stateA       = PIN_SET;
-  encoderPtr->stateB       = PIN_SET;
-  encoderPtr->stateAPrev   = PIN_SET;
-  encoderPtr->stateBPrev   = PIN_SET;
+  encoderPtr->stateA       = stateA;
+  encoderPtr->stateB       = stateB;
+  encoderPtr->stateAPrev   = stateA;
+  encoderPtr->stateBPrev   = stateB;
   encoderPtr->trigger      = ENCODER_RESET;
   encoderPtr->encoderUID   = uid;
+
+  return status;
 }
 
-void encoderUpdateRawValues(Encoder_t* encoderPtr,PinState_t rawStateA, PinState_t rawStateB){
+void encoderUpdateRawValues(Encoder_t* encoderPtr){
 
-  encoderPtr->stateA = rawStateA;
-  encoderPtr->stateB = rawStateB;
+  encoderPtr->stateA=encoderPtr->readA();
+  encoderPtr->stateB=encoderPtr->readB();
+
   // Decode signals, detect A falling edge
   if(checkRisingFallingState(encoderPtr->stateA, encoderPtr->stateAPrev) == EDGE_FALLING){
 

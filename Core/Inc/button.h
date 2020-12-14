@@ -10,10 +10,10 @@
 
 #include "driverUtils.h"
 
-typedef enum ReturnFlags {
+typedef enum ButtonReturnFlags {
   BUTTON_OK = 0,
   BUTTON_INIT_ERROR
-} ReturnFlags_t;
+} ButtonReturnFlags_t;
 
 typedef struct {
   PinState_t state;
