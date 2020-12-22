@@ -70,6 +70,8 @@ void Error_Handler(void);
 #define GPIO_ENC1_B_GPIO_Port GPIOA
 #define GPIO_ENC1_A_Pin GPIO_PIN_9
 #define GPIO_ENC1_A_GPIO_Port GPIOA
+#define GPIO_ENC1_BUTTON_Pin GPIO_PIN_10
+#define GPIO_ENC1_BUTTON_GPIO_Port GPIOA
 #define TMS_Pin GPIO_PIN_13
 #define TMS_GPIO_Port GPIOA
 #define TCK_Pin GPIO_PIN_14

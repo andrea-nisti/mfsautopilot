@@ -1,30 +1,30 @@
 /* USER CODE BEGIN Header */
 /**
-  ******************************************************************************
-  * @file           : main.c
-  * @brief          : Main program body
-  ******************************************************************************
-  * @attention
-  *
-  * <h2><center>&copy; Copyright (c) 2020 STMicroelectronics.
-  * All rights reserved.</center></h2>
-  *
-  * This software component is licensed by ST under BSD 3-Clause license,
-  * the "License"; You may not use this file except in compliance with the
-  * License. You may obtain a copy of the License at:
-  *                        opensource.org/licenses/BSD-3-Clause
-  *
-  ******************************************************************************
-  */
+ ******************************************************************************
+ * @file           : main.c
+ * @brief          : Main program body
+ ******************************************************************************
+ * @attention
+ *
+ * <h2><center>&copy; Copyright (c) 2020 STMicroelectronics.
+ * All rights reserved.</center></h2>
+ *
+ * This software component is licensed by ST under BSD 3-Clause license,
+ * the "License"; You may not use this file except in compliance with the
+ * License. You may obtain a copy of the License at:
+ *                        opensource.org/licenses/BSD-3-Clause
+ *
+ ******************************************************************************
+ */
 /* USER CODE END Header */
 /* Includes ------------------------------------------------------------------*/
-#include <stdint.h>
 #include "main.h"
-#include "encoder.h"
-#include "button.h"
+#include "cmsis_os.h"
+
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-
+#include "button.h"
+#include "encoder.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -49,22 +49,35 @@ typedef uint8_t bool_t;
 /* Private variables ---------------------------------------------------------*/
 UART_HandleTypeDef huart2;
 
+/* Definitions for defaultTask */
+osThreadId_t defaultTaskHandle;
+const osThreadAttr_t defaultTask_attributes = {
+    .name = "defaultTask",
+    .priority = (osPriority_t) osPriorityNormal,
+    .stack_size = 128 * 4
+};
 /* USER CODE BEGIN PV */
-Encoder_t enc1;
+
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
 void SystemClock_Config(void);
 static void MX_GPIO_Init(void);
 static void MX_USART2_UART_Init(void);
-/* USER CODE BEGIN PFP */
+void StartDefaultTask(void *argument);
 
+/* USER CODE BEGIN PFP */
+void readInputTask(void *argument);
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
 PinState_t readButt1(void){
   PinState_t ret = HAL_GPIO_ReadPin(B1_GPIO_Port, B1_Pin);
+  return ret;
+}
+PinState_t readButt2(void){
+  PinState_t ret = HAL_GPIO_ReadPin(GPIO_ENC1_BUTTON_GPIO_Port, GPIO_ENC1_BUTTON_Pin);
   return ret;
 }
 
@@ -81,13 +94,13 @@ PinState_t readEnc1B(void){
 void onB1Push(void){
   HAL_GPIO_TogglePin(LD2_GPIO_Port, LD2_Pin);
 }
-
+Encoder_t enc1;
 /* USER CODE END 0 */
 
 /**
-  * @brief  The application entry point.
-  * @retval int
-  */
+ * @brief  The application entry point.
+ * @retval int
+ */
 int main(void)
 {
   /* USER CODE BEGIN 1 */
@@ -116,53 +129,73 @@ int main(void)
   MX_USART2_UART_Init();
   /* USER CODE BEGIN 2 */
 
-  int32_t prevEncValue = 0;
-  encoderInitStruct(&enc1, 1,readEnc1A, readEnc1B);
 
-  Button_t butt1;
-  while(buttonInitStruct(&butt1, readButt1, NULL, NULL, onB1Push,3000).Code != DRIVER_OK);
 
   /* USER CODE END 2 */
 
+  /* Init scheduler */
+
+  /* USER CODE BEGIN RTOS_MUTEX */
+  /* add mutexes, ... */
+  /* USER CODE END RTOS_MUTEX */
+
+  /* USER CODE BEGIN RTOS_SEMAPHORES */
+  /* add semaphores, ... */
+  /* USER CODE END RTOS_SEMAPHORES */
+
+  /* USER CODE BEGIN RTOS_TIMERS */
+  /* start timers, add new ones, ... */
+  /* USER CODE END RTOS_TIMERS */
+
+  /* USER CODE BEGIN RTOS_QUEUES */
+  /* add queues, ... */
+  /* USER CODE END RTOS_QUEUES */
+
+  /* Create the thread(s) */
+  /* creation of defaultTask */
+
+
+  /* USER CODE BEGIN RTOS_THREADS */
+  xTaskCreate(readInputTask, "readInputs", 240, NULL, 1, NULL);
+  /* USER CODE END RTOS_THREADS */
+
+  /* USER CODE BEGIN RTOS_EVENTS */
+  //osKernelStart();
+  vTaskStartScheduler();
+  /* USER CODE END RTOS_EVENTS */
+
+  /* Start scheduler */
+
+
+  /* We should never get here as control is now taken by the scheduler */
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
-
+  HAL_GPIO_TogglePin(LD2_GPIO_Port, LD2_Pin);
   while (1)
   {
     /* USER CODE END WHILE */
-
+    HAL_Delay(5000);
     /* USER CODE BEGIN 3 */
-    encoderUpdateRawValues(&enc1);
-
-    uint32_t encoderValue = encoderGetValue(&enc1);
-    if((encoderValue != prevEncValue)){
-      HAL_GPIO_TogglePin(LD2_GPIO_Port, LD2_Pin);
-      prevEncValue = encoderValue;
-    }
-
-    buttonUpdateState(&butt1, HAL_GetTick());
-    
-    HAL_Delay(2);
   }
   /* USER CODE END 3 */
 }
 
 /**
-  * @brief System Clock Configuration
-  * @retval None
-  */
+ * @brief System Clock Configuration
+ * @retval None
+ */
 void SystemClock_Config(void)
 {
   RCC_OscInitTypeDef RCC_OscInitStruct = {0};
   RCC_ClkInitTypeDef RCC_ClkInitStruct = {0};
 
   /** Configure the main internal regulator output voltage
-  */
+   */
   __HAL_RCC_PWR_CLK_ENABLE();
   __HAL_PWR_VOLTAGESCALING_CONFIG(PWR_REGULATOR_VOLTAGE_SCALE2);
   /** Initializes the RCC Oscillators according to the specified parameters
-  * in the RCC_OscInitTypeDef structure.
-  */
+   * in the RCC_OscInitTypeDef structure.
+   */
   RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSI;
   RCC_OscInitStruct.HSIState = RCC_HSI_ON;
   RCC_OscInitStruct.HSICalibrationValue = RCC_HSICALIBRATION_DEFAULT;
@@ -177,9 +210,9 @@ void SystemClock_Config(void)
     Error_Handler();
   }
   /** Initializes the CPU, AHB and APB buses clocks
-  */
+   */
   RCC_ClkInitStruct.ClockType = RCC_CLOCKTYPE_HCLK|RCC_CLOCKTYPE_SYSCLK
-                              |RCC_CLOCKTYPE_PCLK1|RCC_CLOCKTYPE_PCLK2;
+      |RCC_CLOCKTYPE_PCLK1|RCC_CLOCKTYPE_PCLK2;
   RCC_ClkInitStruct.SYSCLKSource = RCC_SYSCLKSOURCE_PLLCLK;
   RCC_ClkInitStruct.AHBCLKDivider = RCC_SYSCLK_DIV1;
   RCC_ClkInitStruct.APB1CLKDivider = RCC_HCLK_DIV2;
@@ -192,10 +225,10 @@ void SystemClock_Config(void)
 }
 
 /**
-  * @brief USART2 Initialization Function
-  * @param None
-  * @retval None
-  */
+ * @brief USART2 Initialization Function
+ * @param None
+ * @retval None
+ */
 static void MX_USART2_UART_Init(void)
 {
 
@@ -225,10 +258,10 @@ static void MX_USART2_UART_Init(void)
 }
 
 /**
-  * @brief GPIO Initialization Function
-  * @param None
-  * @retval None
-  */
+ * @brief GPIO Initialization Function
+ * @param None
+ * @retval None
+ */
 static void MX_GPIO_Init(void)
 {
   GPIO_InitTypeDef GPIO_InitStruct = {0};
@@ -255,8 +288,8 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(LD2_GPIO_Port, &GPIO_InitStruct);
 
-  /*Configure GPIO pins : GPIO_ENC1_B_Pin GPIO_ENC1_A_Pin */
-  GPIO_InitStruct.Pin = GPIO_ENC1_B_Pin|GPIO_ENC1_A_Pin;
+  /*Configure GPIO pins : GPIO_ENC1_B_Pin GPIO_ENC1_A_Pin GPIO_ENC1_BUTTON_Pin */
+  GPIO_InitStruct.Pin = GPIO_ENC1_B_Pin|GPIO_ENC1_A_Pin|GPIO_ENC1_BUTTON_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
@@ -267,14 +300,54 @@ static void MX_GPIO_Init(void)
 
 /* USER CODE END 4 */
 
+/* USER CODE BEGIN Header_StartDefaultTask */
 /**
-  * @brief  This function is executed in case of error occurrence.
-  * @retval None
-  */
+ * @brief  Function implementing the defaultTask thread.
+ * @param  argument: Not used
+ * @retval None
+ */
+/* USER CODE END Header_StartDefaultTask */
+void readInputTask(void *argument)
+{
+  /* USER CODE BEGIN 5 */
+
+  int32_t prevEncValue = 0;
+  encoderInitStruct(&enc1, 1,readEnc1A, readEnc1B);
+
+  Button_t butt1;
+  Button_t butt2;
+  while(buttonInitStruct(&butt1, readButt1, NULL, NULL, onB1Push,3000).Code != DRIVER_OK);
+  while(buttonInitStruct(&butt2, readButt2, NULL, NULL, onB1Push,1000).Code != DRIVER_OK);
+  portTickType lastWakeTime = xTaskGetTickCount();
+  /* Infinite loop */
+  while(TRUE){
+
+    portTickType time = xTaskGetTickCount() * portTICK_RATE_MS;
+    encoderUpdateRawValues(&enc1);
+    uint32_t encoderValue = encoderGetValue(&enc1);
+    if((encoderValue != prevEncValue)){
+      HAL_GPIO_TogglePin(LD2_GPIO_Port, LD2_Pin);
+      prevEncValue = encoderValue;
+    }
+    buttonUpdateState(&butt2, time);
+    buttonUpdateState(&butt1, time);
+
+    vTaskDelayUntil(&lastWakeTime, 4/portTICK_RATE_MS);
+  }
+  // Delete self if we ever reach this point
+  vTaskDelete(NULL);
+  /* USER CODE END 5 */
+}
+
+/**
+ * @brief  This function is executed in case of error occurrence.
+ * @retval None
+ */
 void Error_Handler(void)
 {
   /* USER CODE BEGIN Error_Handler_Debug */
   /* User can add his own implementation to report the HAL error return state */
+
   __disable_irq();
   while (1)
   {
@@ -284,12 +357,12 @@ void Error_Handler(void)
 
 #ifdef  USE_FULL_ASSERT
 /**
-  * @brief  Reports the name of the source file and the source line number
-  *         where the assert_param error has occurred.
-  * @param  file: pointer to the source file name
-  * @param  line: assert_param error line source number
-  * @retval None
-  */
+ * @brief  Reports the name of the source file and the source line number
+ *         where the assert_param error has occurred.
+ * @param  file: pointer to the source file name
+ * @param  line: assert_param error line source number
+ * @retval None
+ */
 void assert_failed(uint8_t *file, uint32_t line)
 {
   /* USER CODE BEGIN 6 */
