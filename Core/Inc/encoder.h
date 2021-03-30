@@ -20,7 +20,7 @@ typedef enum {
   ENCODER_ANTICLOCKWISE
 } EncoderTriggerState_t;
 
-typedef struct Encoder{
+typedef struct EncoderStruct{
   uint8_t encoderUID;
   PinState_t stateA;
   PinState_t stateB;
@@ -30,9 +30,10 @@ typedef struct Encoder{
   EncoderTriggerState_t trigger;
   PinState_t (*readA)(void);
   PinState_t (*readB)(void);
+  void (*onTick)(struct EncoderStruct const * const enc);
 } Encoder_t;
 
-DriverStatus_t encoderInitStruct(Encoder_t* encoderPtr, uint8_t uid, PinState_t (*readA)(void), PinState_t (*readB)(void));
+DriverStatus_t encoderInitStruct(Encoder_t* encoderPtr, uint8_t uid, PinState_t (*readA)(void), PinState_t (*readB)(void),void (*onTick)(Encoder_t const * const enc));
 void encoderUpdateRawValues(Encoder_t* encoderPtr);
 int32_t encoderGetValue(Encoder_t* encoderPtr);
 uint8_t getEncoderUID(Encoder_t* encoderPtr);

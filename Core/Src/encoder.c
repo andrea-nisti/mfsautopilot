@@ -9,7 +9,7 @@
 #include <stddef.h>
 #include "encoder.h"
 
-DriverStatus_t encoderInitStruct(Encoder_t* encoderPtr, uint8_t uid, PinState_t (*readA)(void), PinState_t (*readB)(void)){
+DriverStatus_t encoderInitStruct(Encoder_t* encoderPtr, uint8_t uid, PinState_t (*readA)(void), PinState_t (*readB)(void),void (*onTick)(Encoder_t const * const enc)){
   DriverStatus_t status = {
       .Code = DRIVER_ERROR,
       .flag = ENCODER_INIT_ERROR
@@ -20,10 +20,11 @@ DriverStatus_t encoderInitStruct(Encoder_t* encoderPtr, uint8_t uid, PinState_t 
   }
 
 
-  encoderPtr->readA = readA;
-  encoderPtr->readB = readB;
-  PinState_t stateA = readA();
-  PinState_t stateB = readB();
+  encoderPtr->readA  = readA;
+  encoderPtr->readB  = readB;
+  encoderPtr->onTick = onTick;
+  PinState_t stateA  = readA();
+  PinState_t stateB  = readB();
 
   encoderPtr->encoderValue = 0;
   encoderPtr->stateA       = stateA;
@@ -54,6 +55,7 @@ void encoderUpdateRawValues(Encoder_t* encoderPtr){
       if(checkRisingFallingState(encoderPtr->stateB, encoderPtr->stateBPrev) == EDGE_FALLING){
         encoderPtr->encoderValue++;
         encoderPtr->trigger = ENCODER_RESET;
+        encoderPtr->onTick(encoderPtr);
       }
       break;
 
@@ -61,6 +63,7 @@ void encoderUpdateRawValues(Encoder_t* encoderPtr){
       if(checkRisingFallingState(encoderPtr->stateB, encoderPtr->stateBPrev) == EDGE_RISING){
         encoderPtr->encoderValue--;
         encoderPtr->trigger = ENCODER_RESET;
+        encoderPtr->onTick(encoderPtr);
       }
       break;
 
