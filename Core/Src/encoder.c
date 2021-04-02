@@ -9,6 +9,37 @@
 #include <stddef.h>
 #include "encoder.h"
 
+static Encoder_t encoders[MAX_ENCODERS] = {};
+static Encoder_t * freePtr = encoders;
+static Encoder_t const * const lastPtr = &encoders[MAX_ENCODERS-1];
+/*
+static EncoderReturnFlags_t buttonAllocate(Encoder_t** freeButtonElement){
+  auto si = sizeof(**freeButtonElement);
+  static bool initDone = false;
+  if (!initDone){
+     for(Button_t* p = buttons; p <= lastPtr; p++){
+       p->inUse = false;
+     }
+     initDone = true;
+  }
+
+  uint8_t scanComplete = 0;
+  while(freePtr->inUse){
+    if(freePtr == lastPtr || (scanComplete == MAX_ENCODERS)){
+      return BUTTON_ALLOCATE_ERROR;
+    }else{
+      freePtr = buttons;
+    }
+
+    scanComplete++;
+    freePtr++;
+  }
+
+  *freeButtonElement = freePtr;
+  return ENCODER_OK;
+}
+*/
+
 DriverStatus_t encoderInitStruct(Encoder_t* encoderPtr, uint8_t uid, PinState_t (*readA)(void), PinState_t (*readB)(void),void (*onTick)(Encoder_t const * const enc)){
   DriverStatus_t status = {
       .Code = DRIVER_ERROR,

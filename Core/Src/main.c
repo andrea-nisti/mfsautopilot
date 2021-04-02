@@ -80,7 +80,6 @@ PinState_t readButt2(void){
   PinState_t ret = HAL_GPIO_ReadPin(GPIO_ENC1_BUTTON_GPIO_Port, GPIO_ENC1_BUTTON_Pin);
   return ret;
 }
-
 PinState_t readEnc1A(void){
   PinState_t ret = HAL_GPIO_ReadPin(GPIO_ENC1_A_GPIO_Port, GPIO_ENC1_A_Pin);
   return ret;
@@ -132,9 +131,6 @@ int main(void)
   MX_GPIO_Init();
   MX_USART2_UART_Init();
   /* USER CODE BEGIN 2 */
-
-
-
   /* USER CODE END 2 */
 
   /* Init scheduler */
@@ -323,6 +319,7 @@ void readInputTask(void *argument)
 
     portTickType time = xTaskGetTickCount() * portTICK_RATE_MS;
     encoderUpdateRawValues(&enc1);
+    buttonUpdateAllStates(time);
     buttonUpdateAllStates(time);
 
     vTaskDelayUntil(&lastWakeTime, 4/portTICK_RATE_MS);

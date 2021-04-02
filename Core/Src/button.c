@@ -12,31 +12,13 @@ static Button_t buttons[MAX_BUTTONS] = {};
 static Button_t * freePtr = buttons;
 static Button_t const * const lastPtr = &buttons[MAX_BUTTONS-1];
 
-// Set a free element in the buttons array
-static ButtonReturnFlags_t buttonAllocate(Button_t** freeButtonElement){
-  static bool initDone = false;
-  if (!initDone){
-     for(Button_t* p = buttons; p <= lastPtr; p++){
-       p->inUse = false;
-     }
-     initDone = true;
-  }
-
-  uint8_t scanComplete = 0;
-  while(freePtr->inUse){
-    if(freePtr == lastPtr || (scanComplete == MAX_BUTTONS)){
-      return BUTTON_ALLOCATE_ERROR;
-    }else{
-      freePtr = buttons;
-    }
-
-    scanComplete++;
-    freePtr++;
-  }
-
-  *freeButtonElement = freePtr;
-  return BUTTON_OK;
-}
+static StackTCB_t cb = {
+    .actualFreePtr = (uint8_t*)buttons,
+    .elementSize = sizeof(buttons[0]),
+    .beginStackPtr = (uint8_t*)buttons,
+    .endStackPtr = (uint8_t*) &buttons[MAX_BUTTONS-1],
+    .stackSize = MAX_BUTTONS
+};
 
 Button_t const * buttonGetByUID(uint8_t uid){
   Button_t const * p = buttons;
@@ -90,19 +72,20 @@ static DriverStatus_t buttonInitStruct(uint8_t uid, Button_t* buttonStructPtr, P
   }
   buttonStructPtr->uid = uid;
   buttonStructPtr->inUse = true;
+  buttonStructPtr->using = true;
   return status;
 }
 
 ButtonReturnFlags_t buttonAddByUID(
-    btnUID_t id, PinState_t (*read)(void),
+    uint8_t id, PinState_t (*read)(void),
     void (*onPushed)(void), void (*onReleased)(void),
     void (*onPushedTimeElapsed)(void), uint32_t pushTime){
 
   Button_t * newPtr;
-  if(buttonAllocate(&newPtr) == BUTTON_OK){
+  if(stackAllocate((uint8_t**)&newPtr,&cb,true) == ALLOCATE_OK){
     buttonInitStruct(id, newPtr, read, onPushed, onReleased, onPushedTimeElapsed, pushTime);
   }else{
-    return BUTTON_ALLOCATE_ERROR;
+    return ALLOCATE_ERROR;
   }
 
   return BUTTON_OK;

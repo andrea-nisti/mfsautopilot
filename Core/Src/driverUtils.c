@@ -40,3 +40,36 @@ PinState_t updateDebouncedSignal(DebouncedState_t* stateStructPtr, PinState_t ac
        return stateStructPtr->previousRawState;
      }
 }
+
+//Stack Utilities
+// Set a free element in the buttons array
+AllocateReturnFlags_t stackAllocate(uint8_t** freeReturnPtrPtr, StackTCB_t* cb, bool initDone){
+
+  if (!initDone){
+     for(uint8_t * p = cb->beginStackPtr; p <= cb->endStackPtr; p += cb->elementSize){
+       *p = false;
+     }
+     initDone = true;
+  }
+
+  uint8_t scanComplete = 0;
+  // while the block is in use
+  while( *cb->actualFreePtr == true){
+
+    if(scanComplete == cb->stackSize){
+      return ALLOCATE_ERROR;
+    }
+
+    if(cb->actualFreePtr == cb->endStackPtr){
+      // circle back to begin of stack, maybe someone freed the first block
+      cb->actualFreePtr = cb->beginStackPtr;
+      scanComplete++;
+      break;
+    }
+    scanComplete++;
+    cb->actualFreePtr += cb->elementSize;
+  }
+
+  *freeReturnPtrPtr = cb->actualFreePtr;
+  return ALLOCATE_OK;
+}

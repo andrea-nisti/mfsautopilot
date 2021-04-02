@@ -24,8 +24,9 @@ typedef struct {
   uint32_t   timestamp;
 } PinStateTS_t;
 typedef struct {
+  uint8_t using;
+  bool inUse;
   uint8_t uid;
-  //Config parameters (to be separated later on)
   PinState_t (*read)(void);
   void (*onPushed)(void);
   void (*onReleased)(void);
@@ -44,7 +45,7 @@ typedef struct {
     EdgeState_t event;
     uint32_t   timestamp;
   } LastEventTS;
-  bool inUse;
+
 
 } Button_t;
 
@@ -54,7 +55,7 @@ typedef struct {
  */
 // Add a button by uid, BE AWARE: DO NOT ADD TWO BTNS WITH THE SAME ID
 ButtonReturnFlags_t buttonAddByUID(
-    btnUID_t id, PinState_t (*read)(void),
+    uint8_t id, PinState_t (*read)(void),
     void (*onPushed)(void), void (*onReleased)(void),
     void (*onPushedTimeElapsed)(void), uint32_t pushTime);
 
